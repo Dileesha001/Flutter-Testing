@@ -36,6 +36,7 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    var pair=appState.current;
 
   // ...
 
@@ -43,7 +44,7 @@ class MyHomePage extends StatelessWidget {
       body: Column(
         children: [
           Text('A Random AWESOME idea :'),
-          Text(appState.current.asLowerCase),
+          BigCard(pair: pair),
 
           // ↓ Add this.
           ElevatedButton(
@@ -54,6 +55,30 @@ class MyHomePage extends StatelessWidget {
           ),
 
         ],
+      ),
+    );
+  }
+}
+
+class BigCard extends StatelessWidget {
+  const BigCard({
+    super.key,
+    required this.pair,
+  });
+
+  final WordPair pair;
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    final style = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+    return Card(
+      color : theme.colorScheme.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(75.0),
+        child: Text(pair.asLowerCase, style: style),
       ),
     );
   }
