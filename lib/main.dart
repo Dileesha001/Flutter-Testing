@@ -40,6 +40,10 @@ class MyAppState extends ChangeNotifier {
     }
     notifyListeners();
   }
+  void removeFavorite(WordPair pair) {
+    favorites.remove(pair);
+    notifyListeners();
+  }
 }
 
 
@@ -165,9 +169,33 @@ class BigCard extends StatelessWidget {
       color : theme.colorScheme.primary,
       child: Padding(
         padding: const EdgeInsets.all(50.0),
-        child: Text(pair.asLowerCase,
-        style: style,
-        semanticsLabel: pair.asPascalCase,),
+        child: Semantics(
+          label: pair.asPascalCase, // Keep for accessibility
+          child: RichText(
+            text: TextSpan(
+              style: style, // This is the default "normal" style
+              children: [
+                TextSpan(
+                  // Capitalize the first word (e.g., "first" -> "First")
+                  text: pair.first[0].toUpperCase() + pair.first.substring(1),
+                  style: style.copyWith(
+                    fontWeight: FontWeight.w100
+                  )
+                  // This word will use the default 'style'
+                ),
+                TextSpan(
+                  // Capitalize the second word
+                  text: pair.second[0].toUpperCase() + pair.second.substring(1),
+                  
+                  // Take the default 'style' and ONLY change the weight
+                  style: style.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -186,19 +214,66 @@ class FavoritesPage extends StatelessWidget {
       );
     }
 
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text('You have '
-              '${appState.favorites.length} favorites:'),
-        ),
-        for (var pair in appState.favorites)
-          ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
-          ),
-      ],
+    // Use LayoutBuilder to check the screen size
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        
+        // On a narrow screen (phone), use the original ListView
+        if (constraints.maxWidth < 600) {
+          return ListView(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text('You have '
+                    '${appState.favorites.length} favorites:'),
+              ),
+              for (var pair in appState.favorites)
+                ListTile(
+                  leading: Icon(Icons.favorite),
+                  title: Text(pair.asLowerCase),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      appState.removeFavorite(pair);
+                    },
+                  ),
+                ),
+            ],
+          );
+        }
+
+        // On a wide screen (tablet/desktop), use a GridView
+        else {
+          return GridView.count(
+            crossAxisCount: 2, // Show 2 columns. Try 3 or 4!
+            
+            // Adjust this ratio to change the height of grid items
+            childAspectRatio: 7.0, 
+            
+            children: [
+              // We put the header as the first item in the grid
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text('You have '
+                    '${appState.favorites.length} favorites:'),
+              ),
+              
+              // Then add all the favorites
+              for (var pair in appState.favorites)
+                ListTile(
+                  leading: Icon(Icons.favorite),
+                  title: Text(pair.asLowerCase),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      appState.removeFavorite(pair);
+                    },
+                  ),
+                ),
+            ],
+          );
+        }
+      },
     );
   }
 }
